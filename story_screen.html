@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>STORY SCREEN</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;background:#0c0c0c;color:#c8c4bc;font-size:14px;display:flex;flex-direction:column;}
+
+/* TOP */
+.topbar{background:#080808;border-bottom:1px solid #1e1e1e;flex-shrink:0;}
+.topbar-row{display:flex;align-items:center;padding:0 14px;height:50px;gap:10px;}
+.work-btn{flex:1;text-align:left;background:transparent;border:none;color:#c8c4bc;font-size:15px;cursor:pointer;padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit;}
+.chev{font-size:10px;color:#3a3a3a;margin-left:4px;}
+.export-btn{background:transparent;border:1px solid #1e1e1e;border-radius:4px;color:#3a3a3a;font-size:11px;padding:4px 10px;cursor:pointer;font-family:inherit;flex-shrink:0;}
+
+/* WORK MENU */
+.work-menu{border-top:1px solid #1e1e1e;max-height:45vh;overflow-y:auto;display:none;}
+.wm-item{display:flex;align-items:center;padding:0 14px;height:46px;border-bottom:1px solid #111;gap:8px;}
+.wm-item.active{background:#141414;}
+.wm-name{flex:1;font-size:14px;color:#666;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wm-name.active{color:#c8c4bc;}
+.wm-edit-btn{background:transparent;border:none;color:#333;font-size:11px;cursor:pointer;padding:0 4px;font-family:inherit;}
+.wm-del-btn{background:transparent;border:none;color:#2a2a2a;font-size:16px;cursor:pointer;padding:0 2px;font-family:inherit;}
+.wm-input{flex:1;background:#1a1a1a;border:1px solid #a08050;border-radius:3px;color:#c8c4bc;font-size:14px;padding:3px 8px;outline:none;font-family:inherit;}
+.wm-add{padding:13px 14px;color:#3a3a3a;font-size:13px;cursor:pointer;}
+
+/* CONTENT */
+.content{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column;}
+
+/* CARD VIEW */
+.card-view{flex:1;overflow-y:auto;padding:14px 14px 80px;-webkit-overflow-scrolling:touch;display:none;}
+.card-view.on{display:block;}
+.card{margin-bottom:12px;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:6px;overflow:hidden;}
+.card-head{display:flex;align-items:center;padding:10px 14px 8px;gap:8px;}
+.card-heading{flex:1;font-size:13px;font-weight:700;line-height:1.4;}
+.card-edit-btn{background:transparent;border:none;color:#333;font-size:11px;cursor:pointer;padding:2px 6px;font-family:inherit;}
+.card-del-btn{background:transparent;border:none;color:#2a2a2a;font-size:13px;cursor:pointer;padding:2px 4px;font-family:inherit;}
+.card-body{padding:0 14px 12px;font-size:13px;color:#888;line-height:1.9;white-space:pre-wrap;}
+.card-edit{padding:12px;}
+.edit-head{width:100%;background:#0a0a0a;border-radius:4px;color:#c8c4bc;font-size:13px;font-weight:700;padding:6px 10px;outline:none;font-family:inherit;margin-bottom:8px;border:none;}
+.edit-body{width:100%;min-height:80px;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;color:#aaa;font-size:13px;line-height:1.9;padding:6px 10px;resize:vertical;outline:none;font-family:inherit;}
+.edit-acts{display:flex;gap:8px;margin-top:8px;}
+.btn-save{background:#0a140a;border:1px solid #253525;border-radius:4px;color:#6aaa6a;font-size:12px;padding:5px 14px;cursor:pointer;font-family:inherit;}
+.btn-cancel{background:transparent;border:1px solid #1e1e1e;border-radius:4px;color:#3a3a3a;font-size:12px;padding:5px 14px;cursor:pointer;font-family:inherit;}
+.add-block-ta{width:100%;min-height:100px;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;color:#c8c4bc;font-size:13px;line-height:1.9;padding:8px 10px;resize:vertical;outline:none;font-family:inherit;}
+.add-trigger{width:100%;background:transparent;border:1px dashed #1e1e1e;border-radius:6px;color:#3a3a3a;font-size:13px;padding:12px;cursor:pointer;font-family:inherit;letter-spacing:1px;}
+
+/* CONTE VIEW */
+.conte-view{flex:1;display:none;flex-direction:column;overflow:hidden;}
+.conte-view.on{display:flex;}
+.ep-bar{overflow-x:auto;border-bottom:1px solid #1e1e1e;background:#080808;flex-shrink:0;-webkit-overflow-scrolling:touch;}
+.ep-bar::-webkit-scrollbar{display:none;}
+.ep-row{display:inline-flex;padding:0 10px;min-width:100%;white-space:nowrap;}
+.ep-btn{padding:9px 14px;border:none;background:transparent;color:#3a3a3a;font-size:13px;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-0.5px;}
+.ep-btn.on{color:#9a7abf;border-bottom-color:#9a7abf;font-weight:700;}
+.ep-add-btn{padding:9px 10px;border:none;background:transparent;color:#3a3a3a;font-size:18px;cursor:pointer;margin-bottom:-0.5px;line-height:1;}
+.ep-input{background:#1a1a1a;border:1px solid #9a7abf;border-radius:3px;color:#c8c4bc;font-size:13px;padding:3px 8px;outline:none;font-family:inherit;width:80px;margin:6px 4px;}
+.conte-ta{flex:1;background:#0d0d0d;border:none;outline:none;color:#c8c4bc;font-size:15px;line-height:2.2;padding:20px 18px;resize:none;font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;caret-color:#9a7abf;-webkit-overflow-scrolling:touch;}
+
+/* TABS */
+.tabbar{display:flex;background:#080808;border-top:1px solid #1e1e1e;flex-shrink:0;}
+.tab{flex:1;padding:13px 2px 11px;background:transparent;border:none;border-top:2px solid transparent;color:#404040;font-size:12px;cursor:pointer;font-family:inherit;transition:all .12s;}
+.tab.on{font-weight:700;}
+</style>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="STORY SCREEN">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" id="manifestLink">
+<script>
+// inline manifest
+const manifest = {
+  name: "STORY SCREEN",
+  short_name: "STORY SCREEN",
+  start_url: ".",
+  display: "standalone",
+  background_color: "#0c0c0c",
+  theme_color: "#080808",
+  orientation: "portrait",
+  icons: [{
+    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23080808'/%3E%3Ctext x='256' y='320' font-size='240' text-anchor='middle' fill='%23c8c4bc' font-family='serif'%3ES%3C/text%3E%3C/svg%3E",
+    sizes: "512x512",
+    type: "image/svg+xml"
+  }]
+};
+const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+const url = URL.createObjectURL(blob);
+document.getElementById('manifestLink').href = url;
+</script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <button class="work-btn" id="workBtn" onclick="toggleMenu()">
+      <span id="workTitle"></span><span class="chev">▾</span>
+    </button>
+    <button class="export-btn" onclick="exportWork()">書き出し</button>
+  </div>
+  <div class="work-menu" id="workMenu"></div>
+</div>
+
+<div class="content" id="content">
+  <div class="card-view on" id="cardView"></div>
+  <div class="conte-view" id="conteView">
+    <div class="ep-bar"><div class="ep-row" id="epRow"></div></div>
+    <textarea class="conte-ta" id="conteTA" placeholder="▼でページめくり&#10;「セリフ」（心内語）ト書きはそのまま" oninput="saveConteTA()" spellcheck="false"></textarea>
+  </div>
+</div>
+
+<div class="tabbar" id="tabbar"></div>
+
+<script>
+const SECTIONS = ["基本","構成","キャラ","プロット","シーン","コンテ"];
+const SEC_COLORS = {基本:"#888",構成:"#c8a96e",キャラ:"#c87a6e",プロット:"#5f8fba",シーン:"#6aaa7a",コンテ:"#9a7abf"};
+const SK = 'ss_v4';
+
+const KIHON = `▼原案
+秘密は墓まで持っていく
+でも墓にお前がいないと喋れない
+同じ墓に入ってくれ
+
+▼ログライン
+心中未遂で一人だけ死んだ夜。残された二人は互いを庇い、互いを「犯人」だと思いながら、誰にも言えないまま生き続ける。
+
+▼キーワード
+共犯愛 / 罪と愛 / 秘密 / 自首しない選択 / 墓まで
+
+▼テーマ
+罪を一緒に背負うという構造を恋愛の形にする。
+共犯でも共犯じゃなくても、愛していい。
+
+▼ジャンル
+BL × サスペンス × 過去の罪 × 死生観`;
+
+const KOUSEI = `▼ミスリード設計
+冒頭（ユウマの返り血）→「ユウマが殺した？」血・無表情・ボタンで殺人感演出
+回想①（アキ視点）→アキが拒絶した→落下→「アキのせい…？」
+回想②（ユウマ視点）→掴んだ→すり抜けた→「結局、落とした…？」
+ラスト直前→両者が「自分が殺した」と言い出す→読者は「…いや、違うかも？」と気づく
+ラスト→リツが自分から力を抜いた描写（微細）→「リツが二人を生かしたかったのか？」
+
+▼全体の目的
+冒頭で「これは殺人ものだ」と思わせつつ、実際は「自殺未遂に巻き込まれた少年たちの記憶」だと、あとからわかる構造にする。
+
+▼オチ・結末
+ハッピーエンドではなく「これからやっと、誰にも言えないまま、生きていける気がする」
+告白ではなく「俺たちは、もうずっと一緒だったんだよな」
+キスではなく、額へのキス（守りの愛）
+自首は「選ばなかった未来」として匂わせる
+
+▼各話
+1話：導入。事件。「これは殺人ものだ」と思わせる。現在のユウマ・アキ。
+2話：関係（過去）
+3話：事件（過去）
+4話：関係（過去）
+5話：事件（過去）
+6話：関係（過去）
+7話：事件（過去）
+8話：関係（過去）
+9話：事件（過去）
+10話：事件（過去）
+11話：事件（過去）
+12話：関係（結末）
+
+▼回想の挿入方法
+会話中に回想へは繋がない（「あの時さ……」みたいな導入ナシ）
+現代パートでの何気ない動作がトリガーになる
+例：氷がカランと鳴った音→高校時代の冷蔵庫前のシーンに飛ぶ`;
+
+const KYARA = `▼ユウマ（攻め）
+明るくおしゃべり。見かけはバカで軽い。
+「喋る」ことで"罪悪感を散らそう"としてる節あり。
+無意識に真相を口にしそうになる→受けに止められる。
+恋情：アキに恋愛感情
+自責：「自分が助けようとして、リツを落としてしまった」
+相手への認識：アキは何も悪くない
+決意：「アキを守るために、俺が全部抱えて生きる」
+優しさの表出：笑う、ごまかす、明るく振る舞う
+構造：「一緒に地獄に落ちてくれよ、ひとりじゃ寂いから」
+
+▼アキ（受け）
+物静かで冷静。責任感と自罰感強め。
+事件の夜、ユウマを庇って嘘をついた。
+思いやりが強く、人の感情に敏感。誰かを否定しない。
+リツに誘われたとき、自分が「必要とされた」ことが嬉しかった。
+恋情：リツに対して恋愛感情
+自責：「自分が一緒に死ななかったせいでリツが死んだ」
+決意：「この秘密は言わない。ユウマに未来があるように」
+優しさの表出：黙る、受け入れる、支える
+構造：「お前の未来のためなら、俺は一人で地獄に堕ちる」
+
+▼リツ
+静かで淡々。感受性が深く内向しているタイプ。
+アキにだけは、時折やわらかく微笑む。
+「死にたい」ではなく、「生きづらい」という感覚の延長線上で心中を提案した。
+最後の瞬間、ユウマの手を自ら振りほどき、「ありがとう」と言って自分の意思で離れた。
+母に支配的に期待される家庭環境。将来を自分で選べない。
+参照：椎名もた、澤田空海理、宮崎夏次系
+
+▼対比表（ユウマ×アキ）
+恋情：ユウマ→アキ / アキ→リツ
+自責：ユウマ→助けようとして落とした / アキ→一緒に死ななかったから
+相手への認識：ユウマ→アキは悪くない / アキ→ユウマは悪くない
+優しさの表出：ユウマ→笑う、ごまかす / アキ→黙る、受け入れる
+決意：ユウマ→全部抱えて生きる / アキ→ユウマに未来を
+構造：ユウマ→「一緒に地獄に落ちてくれよ」 / アキ→「俺は一人で地獄に堕ちる」
+
+▼リツのセリフ素材
+「死にたいって口にすると軽すぎて、生きたいと言うには重すぎた」
+「一緒に行こうって言って、うなずいてくれたら、俺、最後までちゃんと寂しかったって思える気がした」
+「軽薄なラブソングを楽しめない自分が嫌いだった。笑ってる人を、どこか他人事みたいに見てる自分も。」
+「あいつ、いいよな。どんな顔してても"生きてる"って感じがする」
+「なんで、ああいうふうに笑えるんだろう。怖くないのかな。……先のこととか」`;
+
+const PLOT = `▼事件の真実
+心中未遂で、3人のうち1人（リツ）だけが死んだ。
+アキは「自分だけ生き残った」ことに罪を感じている。
+ユウマは「助けようとして、結果的に死なせた」と思っている。
+リツの死は「事故」と処理されている。
+互いが互いを庇っていて、犯人がどっちかは読者にはわからないまま進む。
+
+▼現代パート設計
+同じ大学に進学。一緒に住んでいないけど生活リズムがリンク。
+食事を作りに来るユウマ／拒まず受け入れるアキ。
+地元に帰る話題をお互い避ける。
+高校時代の写真→リツが真ん中で、両脇にユウマとアキ。
+
+▼自首シーン（選ばなかった未来）
+深夜、ユウマがとうとう「全部話したい」と切り出す
+アキ「俺が許してる。それじゃ足りない？」
+ユウマ「足りる。でも怖い。俺、お前がいるから生きてる」
+アキ「だったら、俺と一緒に墓まで持ってけ」
+→ユウマ「喋っていい？」アキ「黙ってて」
+→読者は「喋ったら自首だった」と気づく`;
+
+const SCENE_DATA = `▼冒頭イメージ
+血みどろの攻め
+血まみれで絶望顔の受け
+
+▼屋上・事件の夜（アキ視点）
+夜の風が、シャツの裾を揺らす。フェンスの外に立つリツの背中。
+「ねえ、手、繋いでてくれる？」
+アキはその手を取る。けれど、指を絡めることができなかった。
+「……やっぱり、無理だよね」
+リツがアキの体を安全な位置まで押し戻す。靴を脱いで揃える。
+屋上の扉が開く音。リツが振り返る。
+「リツ！！！」ユウマの叫びと、リツの微笑みが、同時だった。
+
+▼屋上・事件の夜（ユウマ視点）
+リツの手首を掴む。
+リツ「ありがとう。でも、もういいんだ」
+手首から力が抜ける。ユウマの手の中に残った布。リツが落下していく。
+「死ぬなよ……お願いだからさ……」
+
+▼事件直後
+アキ「俺が……殺した……俺が、手を離したから……」
+アキ「なんで来たの！？なんであんたが来たの……っ！！」
+ユウマ「お前が、好きだったから……」
+血のついた手でアキの背中を抱く。アキは殴るように胸を叩く。それでもユウマは離さない。
+
+▼現代・眠るアキ
+アキが眠ったまま「……リツ」とつぶやく
+ユウマが一瞬、痛そうな顔をする
+でも何も言わず、おでこにそっとキスして去る
+
+▼検討中のシーン
+大学進学後、地元に帰りにくいユウマとアキ
+リツ「誰かといる時の方が寂しさを感じるんだ、変だろ？」
+リツ「なだらかな日常すら生きにくいと感じる事すらある」
+カツアゲ→アキが助けに入って→ユウマがぼこす→IHに響く→全員で逃げる
+
+▼回想①弁当シーン
+教室の窓際、昼休み。ユウマが「今日も全部食い切れなかった」と笑って弁当の残りを差し出す。
+アキが箸を止める。「それ昨日も言ってた」
+リツがそれを受け取るが、口にはしない。口元にだけ、気配のような微笑。
+「なんか、もう食べなくてもいい気がしてるんだよね」ユウマが軽口のように言う。
+リツは、一口だけ食べてから、小さく言う。「食べておいた方が、少しあったかいよ」
+その言い方が、なぜか少しだけ遠く感じた。
+
+▼回想②図書館のシーン
+図書館。アキがリツの横に座る。
+黙ってノートに目を落とすリツの隣で、アキがふと手を止める。
+「リツ、最近眠れてる？」
+答えは返ってこない。数秒の間。
+ページをめくる音。
+「眠れないって話をしても、誰も眠らせてくれるわけじゃないから」
+そう言って、リツは視線を動かさないまま、アキのノートに手を伸ばし、間違いを指でなぞる。
+優しさの形を借りて、何かを遠ざけているようだった。
+
+▼回想③ユウマが笑いを取ろうとしてスベった昼休み
+ユウマがバカみたいな替え歌を大声で歌いながら教室に入ってくる。
+クラスは失笑。アキは呆れてプリントに目を戻す。
+リツだけが一瞬、口元をほころばせたのをアキは見逃さなかった。
+「今、笑ったでしょ」
+「……笑ってないよ」
+でも、確かに、ほんの少しだけ、笑っていた。
+ああ、と思う。
+この人がいつか全部笑わなくなったら、きっと取り返せなくなるんだ。
+
+▼回想④リツの忘れ物を代わりに届けるアキとユウマ
+リツが帰ったあと、机にノートが一冊。
+「まただよ、アイツ」ユウマが呆れながら持ち上げる。
+「気づいてないのかな」
+「気づいてるけど、いいんだと思う」アキが言う。
+そのノートには、細く揃った字でびっしりと過去問の回答が書かれていて、
+表紙の端に、薄く「ありがとう」と書かれた付箋が貼ってあった。
+
+▼回想⑤三人で河原でぼーっとしているシーン
+河原。夕暮れ。
+ユウマが石を投げては、アキに「見てた？」と声をかける。
+アキがふっと笑って頷く。
+リツは少し離れて、夕日に背を向けて座っている。
+「リツ、そっち何かあんの？」
+ユウマが声をかける。
+「別に。……風がこっちから吹いてるだけ」
+その言い方が、なんとなく置き去りにされることを望んでるように聞こえた。
+だから誰も、それ以上は聞かなかった。
+
+▼回想⑥花火大会の誘い
+夕方の帰り道、蝉の声がけたたましく響く。遠くからは太鼓の音。
+ユウマ、アキ、リツの三人は、学校からの坂を並んで歩いていた。
+「今日、神社のとこ屋台出てたぞ。夏祭りだってさ。たぶん、明日が本番？」
+「そうなんだ。明日って、花火あるやつ？」アキが歩きながら振り返る。
+「そうそう！見に行こうぜ、みんなで！」ユウマが無邪気に笑う。
+「……あんまり、人多いと、苦しくなるね」リツがぽつりとつぶやく。
+「そっか。たしかに、ギュウギュウだもんな」
+「でも、花火……見たい？」アキがリツの横顔を伺う。
+「——学校の屋上から、見えるかなって思って」リツがふと立ち止まり、空を見上げながら言う。
+「屋上？　こっそり入るの？」アキが少し驚いたように笑う。
+「風が抜けて気持ちいいよ。夜の校舎、誰もいないし」
+「まじか、青春すぎ！じゃあ持ってくもん決めようぜ。飲み物と、レジャーシートと……スピーカーとか」
+「スピーカーは迷惑だからやめときな」アキが呆れたように笑う。
+「——静かな方が、きれいに見えると思うよ」リツの声は静かで、どこか遠い。
+
+▼回想⑦IH敗退後のストバスコート（ユウマの沈黙）
+夕方、ストバスのコート。バスケットボールの跳ねる音。
+ドリブル捌きの華麗なユウマ、シュートフォームに入るユウマ。
+道ゆく女子生徒たちの声
+「バスケ部、IH、初戦で負けちゃったんだって。」
+シュートは打てなかった。
+「えっ嘘？負けちゃったの？去年は全国だったじゃん」
+「初戦が、優勝候補だったらしいよ」
+「えーツいてないね」
+「３年はもう引退だって」
+「早めに勉強できていいんじゃない？」
+広いコート、一人、ボールを手に持ち立ち尽くすユウマ
+「ユウマ！」アキの声。コートの外のフェンス越しに話しかけている。横にはリツ。
+「じゃあ俺、予備校あるから」そう言って、離れるリツ。
+ユウマ（オレは、バスケを手放せないでいる）
+
+▼回想⑧敗北後の帰り道（ユウマの空白）
+アキとユウマが二人で歩いている。
+バスケの夢を諦めて、一般入試で大学。
+「俺バカだから、今から受験って言われても実感わかないっていうか」
+「ユウマ、頑張り屋だから、バスケここまで頑張れたんだよ。勉強も頑張れば絶対できるって」
+「みせてやれ、スタメン根性」
+立ち止まってユウマが聞く
+「アキ、何大いくの？」
+
+▼回想⑨体育館の二人（リツとユウマ）
+ユウマは一人でバスケをしている。
+リツは入り口付近に座って単語帳を見ている。
+「ユウマはどこの大学行くの？」
+「おれ？おれは、」
+アキに志望校を聞いた日を思い出す。
+「…アキと同じ大学に行く」
+シュート、シュートは少しリングに引っかかる
+「やっぱ下手になったなー！」照れ隠しみたいにケロリと笑うユウマ
+自分とは違い、好きに将来を選択するユウマを目の当たりにして傷ついた顔するリツ
+リツは親の言う大学に行く事を強要されている。
+
+▼回想⑩リツの家庭環境（静かな圧）
+いつも通りに遊んでて、死にたかったわけじゃないけど
+将来に不安がある、今を終わらせたい
+リツは家庭では母親に期待、依存されてる
+側から見たら普通の家庭
+受験勉強へのプレッシャー
+「お母さん、りっくんを信じてるから」
+「良い大学に入って、パパとは違う良い大人になってね」
+「おかあさんはりっくんのためを思って言ってるのに、りっくんはわかってくれないんだ」
+「りっくんが行く大学、お母さん選んでおいたから、確認してね」
+家庭の外で助けてくれるアキが好き
+全部が不安で先のことを考えらんない、家庭のこと、自分の恋心も
+ユウマはアキと一緒にいる事を自分で選べる
+リツはアキと一緒にいる事すら自分の意思で選べない環境
+だから、アキから自分に寄り添ってくれたことが嬉しかった`;
+
+// ── state ──
+let works = [], curWid = null, curSec = '基本', curEp = 'unset', menuOpen = false, editingWid = null, editingCardIdx = null, addingCard = false, addingEp = false;
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+function load(){
+  try {
+    const d = JSON.parse(localStorage.getItem(SK) || 'null');
+    if(d && d.length){ works = d; curWid = works[0].id; return; }
+  } catch(e){}
+  works = [
+    { id: uid(), title:'秘密を墓まで', data:{ 基本:KIHON, 構成:KOUSEI, キャラ:KYARA, プロット:PLOT, シーン:SCENE_DATA, コンテ:'' }, eps:[] },
+    { id: uid(), title:'奈落', data:{ 基本:'', 構成:'', キャラ:'', プロット:'', シーン:'', コンテ:'' }, eps:[] },
+  ];
+  curWid = works[0].id;
+}
+
+function save(){ localStorage.setItem(SK, JSON.stringify(works)); }
+
+function getWork(){ return works.find(w => w.id === curWid); }
+
+function getConteKey(){ return curEp === 'unset' ? 'コンテ' : 'コンテ_' + curEp; }
+
+// ── parse blocks ──
+function parseBlocks(text){
+  if(!text || !text.trim()) return [];
+  const parts = text.split(/\n▼/);
+  return parts.map((chunk, i) => {
+    const t = (i===0 ? chunk.replace(/^▼/,'') : chunk).trimStart();
+    const nl = t.indexOf('\n');
+    if(nl === -1) return { heading: t.trim(), body: '' };
+    return { heading: t.slice(0, nl).trim(), body: t.slice(nl+1).trim() };
+  }).filter(b => b.heading || b.body);
+}
+
+function blocksToText(blocks){
+  return blocks.map(b => `▼${b.heading}\n${b.body}`).join('\n\n');
+}
+
+// ── render ──
+function render(){
+  const w = getWork();
+  // title
+  document.getElementById('workTitle').textContent = w ? w.title : '';
+  // menu
+  renderMenu();
+  // tabs
+  renderTabs();
+  // content
+  if(curSec === 'コンテ'){
+    document.getElementById('cardView').classList.remove('on');
+    document.getElementById('conteView').classList.add('on');
+    renderEpBar();
+    renderConteTA();
+  } else {
+    document.getElementById('conteView').classList.remove('on');
+    document.getElementById('cardView').classList.add('on');
+    renderCards();
+  }
+}
+
+function renderTabs(){
+  const bar = document.getElementById('tabbar');
+  bar.innerHTML = SECTIONS.map(s => {
+    const c = SEC_COLORS[s];
+    const on = s === curSec;
+    return `<button class="tab ${on?'on':''}" onclick="selectSec('${s}')"
+      style="color:${on?c:'#404040'};border-top-color:${on?c:'transparent'}">${s}</button>`;
+  }).join('');
+}
+
+function renderMenu(){
+  const menu = document.getElementById('workMenu');
+  menu.style.display = menuOpen ? 'block' : 'none';
+  if(!menuOpen){ menu.innerHTML=''; return; }
+  menu.innerHTML = works.map(w => {
+    const active = w.id === curWid;
+    if(editingWid === w.id){
+      return `<div class="wm-item ${active?'active':''}">
+        <input class="wm-input" id="wm_input_${w.id}" value="${esc(w.title)}" onblur="finishEditWork('${w.id}')" onkeydown="if(event.key==='Enter')finishEditWork('${w.id}')">
+      </div>`;
+    }
+    return `<div class="wm-item ${active?'active':''}">
+      <span class="wm-name ${active?'active':''}" onclick="selectWork('${w.id}')">${esc(w.title)||'無題'}</span>
+      <button class="wm-edit-btn" onclick="startEditWork('${w.id}')">編集</button>
+      ${works.length>1?`<button class="wm-del-btn" onclick="delWork('${w.id}')">×</button>`:''}
+    </div>`;
+  }).join('') + `<div class="wm-add" onclick="addWork()">＋ 新しい作品</div>`;
+  // focus input if editing
+  if(editingWid){
+    setTimeout(()=>{ const el=document.getElementById('wm_input_'+editingWid); if(el)el.focus(); }, 0);
+  }
+}
+
+function renderEpBar(){
+  const w = getWork(); if(!w) return;
+  const eps = w.eps || [];
+  const color = SEC_COLORS['コンテ'];
+  let html = `<button class="ep-btn ${curEp==='unset'?'on':''}" onclick="selectEp('unset')" style="${curEp==='unset'?'color:'+color+';border-bottom-color:'+color:''}">未割当</button>`;
+  eps.forEach(ep => {
+    const on = curEp === ep.id;
+    html += `<button class="ep-btn ${on?'on':''}" onclick="selectEp('${ep.id}')" style="${on?'color:'+color+';border-bottom-color:'+color:''}">${esc(ep.name)}</button>`;
+  });
+  if(addingEp){
+    html += `<input class="ep-input" id="epInput" placeholder="例：1話" onkeydown="if(event.key==='Enter')finishAddEp();if(event.key==='Escape')cancelAddEp();" onblur="finishAddEp()">`;
+  } else {
+    html += `<button class="ep-add-btn" onclick="startAddEp()">＋</button>`;
+  }
+  document.getElementById('epRow').innerHTML = html;
+  if(addingEp) setTimeout(()=>{ const el=document.getElementById('epInput'); if(el)el.focus(); }, 0);
+}
+
+function renderConteTA(){
+  const w = getWork(); if(!w) return;
+  const key = getConteKey();
+  document.getElementById('conteTA').value = w.data[key] || '';
+}
+
+function renderCards(){
+  const w = getWork(); if(!w) return;
+  const text = w.data[curSec] || '';
+  const blocks = parseBlocks(text);
+  const color = SEC_COLORS[curSec];
+  const cv = document.getElementById('cardView');
+
+  let html = blocks.map((b, i) => {
+    if(editingCardIdx === i){
+      return `<div class="card">
+        <div class="card-edit">
+          <input class="edit-head" id="edit_h_${i}" value="${esc(b.heading)}" placeholder="見出し" style="border:1px solid ${color}66">
+          <textarea class="edit-body" id="edit_b_${i}" rows="4">${esc(b.body)}</textarea>
+          <div class="edit-acts">
+            <button class="btn-save" onclick="saveCard(${i})">保存</button>
+            <button class="btn-cancel" onclick="cancelCard()">キャンセル</button>
+          </div>
+        </div>
+      </div>`;
+    }
+    return `<div class="card">
+      <div class="card-head">
+        <span class="card-heading" style="color:${color}">${esc(b.heading)||'（見出しなし）'}</span>
+        <button class="card-edit-btn" onclick="startEditCard(${i})">編集</button>
+        <button class="card-del-btn" onclick="delCard(${i})">×</button>
+      </div>
+      ${b.body ? `<div class="card-body">${esc(b.body)}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  if(addingCard){
+    html += `<div class="card" style="border-color:${color}66">
+      <div class="card-edit" style="padding:12px">
+        <textarea class="add-block-ta" id="addBlockTA" placeholder="見出し&#10;内容を書く"></textarea>
+        <div class="edit-acts">
+          <button class="btn-save" onclick="submitAddCard()">追加</button>
+          <button class="btn-cancel" onclick="cancelAddCard()">キャンセル</button>
+        </div>
+      </div>
+    </div>`;
+  } else {
+    html += `<button class="add-trigger" onclick="startAddCard()" style="--c:${color}"
+      onmouseover="this.style.borderColor='${color}66';this.style.color='${color}'"
+      onmouseout="this.style.borderColor='#1e1e1e';this.style.color='#3a3a3a'">＋ ブロックを追加</button>`;
+  }
+
+  cv.innerHTML = html;
+  if(addingCard) setTimeout(()=>{ const el=document.getElementById('addBlockTA'); if(el)el.focus(); }, 0);
+  if(editingCardIdx !== null) setTimeout(()=>{ const el=document.getElementById('edit_h_'+editingCardIdx); if(el)el.focus(); }, 0);
+}
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── actions ──
+function toggleMenu(){ menuOpen = !menuOpen; renderMenu(); }
+
+function selectWork(id){ curWid=id; curEp='unset'; menuOpen=false; editingCardIdx=null; addingCard=false; save(); render(); }
+
+function startEditWork(id){ editingWid=id; renderMenu(); }
+
+function finishEditWork(id){
+  const el=document.getElementById('wm_input_'+id);
+  if(el){ const w=works.find(x=>x.id===id); if(w) w.title=el.value; }
+  editingWid=null; save(); renderMenu();
+  if(id===curWid) document.getElementById('workTitle').textContent=getWork()?.title||'';
+}
+
+function addWork(){
+  const w={id:uid(),title:`作品${works.length+1}`,data:{基本:'',構成:'',キャラ:'',プロット:'',シーン:'',コンテ:''},eps:[]};
+  works.push(w); curWid=w.id; menuOpen=false; editingWid=w.id; save(); render();
+}
+
+function delWork(id){
+  if(works.length<=1) return;
+  if(!confirm('この作品を削除しますか？')) return;
+  const idx=works.findIndex(w=>w.id===id);
+  works=works.filter(w=>w.id!==id);
+  if(curWid===id){ curWid=works[Math.max(0,idx-1)].id; }
+  save(); render();
+}
+
+function selectSec(s){ curSec=s; editingCardIdx=null; addingCard=false; render(); }
+
+function selectEp(id){ curEp=id; renderEpBar(); renderConteTA(); }
+
+function startAddEp(){ addingEp=true; renderEpBar(); }
+
+function finishAddEp(){
+  const el=document.getElementById('epInput'); if(!el) return;
+  const name=el.value.trim();
+  if(name){
+    const w=getWork(); if(!w) return;
+    const id=uid();
+    if(!w.eps) w.eps=[];
+    w.eps.push({id,name});
+    curEp=id; save();
+  }
+  addingEp=false; renderEpBar(); renderConteTA();
+}
+
+function cancelAddEp(){ addingEp=false; renderEpBar(); }
+
+function saveConteTA(){
+  const w=getWork(); if(!w) return;
+  const key=getConteKey();
+  w.data[key]=document.getElementById('conteTA').value;
+  save();
+}
+
+function startEditCard(i){ editingCardIdx=i; addingCard=false; renderCards(); }
+
+function saveCard(i){
+  const h=document.getElementById('edit_h_'+i)?.value||'';
+  const b=document.getElementById('edit_b_'+i)?.value||'';
+  const w=getWork(); if(!w) return;
+  const blocks=parseBlocks(w.data[curSec]);
+  blocks[i]={heading:h,body:b};
+  w.data[curSec]=blocksToText(blocks);
+  editingCardIdx=null; save(); renderCards();
+}
+
+function cancelCard(){ editingCardIdx=null; renderCards(); }
+
+function delCard(i){
+  const w=getWork(); if(!w) return;
+  const blocks=parseBlocks(w.data[curSec]).filter((_,idx)=>idx!==i);
+  w.data[curSec]=blocksToText(blocks);
+  editingCardIdx=null; save(); renderCards();
+}
+
+function startAddCard(){ addingCard=true; editingCardIdx=null; renderCards(); }
+
+function submitAddCard(){
+  const ta=document.getElementById('addBlockTA'); if(!ta) return;
+  const text=ta.value.trim(); if(!text){ addingCard=false; renderCards(); return; }
+  const lines=text.split('\n');
+  const h=lines[0]; const b=lines.slice(1).join('\n');
+  const w=getWork(); if(!w) return;
+  const blocks=parseBlocks(w.data[curSec]);
+  blocks.push({heading:h,body:b});
+  w.data[curSec]=blocksToText(blocks);
+  addingCard=false; save(); renderCards();
+}
+
+function cancelAddCard(){ addingCard=false; renderCards(); }
+
+function exportWork(){
+  const w=getWork(); if(!w) return;
+  const body=SECTIONS.map(s=>`■ ${s}\n${w.data[s]||'（未記入）'}`).join('\n\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([`【${w.title}】\n\n${body}`],{type:'text/plain;charset=utf-8'}));
+  a.download=`${w.title}.txt`; a.click();
+}
+
+// ── init ──
+load();
+render();
+</script>
+</body>
+</html>
