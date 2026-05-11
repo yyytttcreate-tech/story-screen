@@ -98,7 +98,7 @@ document.getElementById('manifestLink').href = url;
     <button class="work-btn" id="workBtn" onclick="toggleMenu()">
       <span id="workTitle"></span><span class="chev">▾</span>
     </button>
-    <button class="export-btn" onclick="exportWork()">書き出し</button>
+    <button class="export-btn" id="syncBtn" onclick="ghSave()" style="margin-right:6px">保存</button><button class="export-btn" onclick="exportWork()">書き出し</button>
   </div>
   <div class="work-menu" id="workMenu"></div>
 </div>
@@ -114,6 +114,70 @@ document.getElementById('manifestLink').href = url;
 <div class="tabbar" id="tabbar"></div>
 
 <script>
+
+// ── GitHub同期 ──
+const GH_TOKEN = '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';
+const GH_OWNER = 'yyytttcreate-tech';
+const GH_REPO = 'story-screen';
+const GH_FILE = 'data.json';
+const GH_API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+
+let ghSha = null; // ファイルのSHA（更新時に必要）
+let syncStatus = 'idle'; // idle / syncing / done / error
+
+async function ghLoad() {
+  try {
+    setSyncStatus('syncing');
+    const res = await fetch(GH_API, {
+      headers: { 'Authorization': `token ${GH_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.status === 404) { setSyncStatus('idle'); return; } // ファイルなし=初回
+    if (!res.ok) throw new Error('load failed');
+    const json = await res.json();
+    ghSha = json.sha;
+    const data = JSON.parse(atob(json.content.replace(/
+/g, '')));
+    works = data;
+    curWid = works[0]?.id || null;
+    setSyncStatus('done');
+    render();
+  } catch(e) {
+    console.error(e);
+    setSyncStatus('error');
+  }
+}
+
+async function ghSave() {
+  try {
+    setSyncStatus('syncing');
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(works))));
+    const body = { message: 'update', content };
+    if (ghSha) body.sha = ghSha;
+    const res = await fetch(GH_API, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${GH_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('save failed');
+    const json = await res.json();
+    ghSha = json.content.sha;
+    setSyncStatus('done');
+  } catch(e) {
+    console.error(e);
+    setSyncStatus('error');
+  }
+}
+
+function setSyncStatus(status) {
+  syncStatus = status;
+  const el = document.getElementById('syncBtn');
+  if (!el) return;
+  if (status === 'syncing') { el.textContent = '同期中…'; el.style.color = '#c8a96e'; }
+  else if (status === 'done') { el.textContent = '保存済み✓'; el.style.color = '#6aaa7a'; setTimeout(()=>{ el.textContent='保存'; el.style.color='#3a3a3a'; }, 2000); }
+  else if (status === 'error') { el.textContent = 'エラー'; el.style.color = '#c87a6e'; }
+  else { el.textContent = '保存'; el.style.color = '#3a3a3a'; }
+}
+
 const SECTIONS = ["基本","構成","キャラ","プロット","シーン","コンテ"];
 const SEC_COLORS = {基本:"#888",構成:"#c8a96e",キャラ:"#c87a6e",プロット:"#5f8fba",シーン:"#6aaa7a",コンテ:"#9a7abf"};
 const SK = 'ss_v4';
@@ -664,6 +728,7 @@ function exportWork(){
 // ── init ──
 load();
 render();
+ghLoad();
 </script>
 </body>
 </html>
